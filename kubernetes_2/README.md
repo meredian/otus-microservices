@@ -20,7 +20,7 @@ Folder includes:
 * `make build` to build docker image of rust service
 * `make push` to push image to Docker Hub (if you're `meredian` user :wink:)
 * `make apply` to apply manifests
-* `make restart` to restart pods (in case image was changed, but to manifest change)
+* `make restart` to restart pods (in case image was changed, but not manifest change for deployment)
 * `make test` to run cURL queries to all expected urls, quick check
 * `make logs` to watch logs on deployed pods
 * `make` will trigger whole sequence in that order
