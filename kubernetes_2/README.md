@@ -5,8 +5,6 @@ Folder includes:
 * Simple application (in Rust) which responses 200 OK to `GET /` and `GET /health`
 * Kubernetes manifest to deploy it as a service with Nginx ingress. Service is exposed as `http://arch.homework/`.
 
-*NOTE*: K8S deploys to namespace `meredian`. So you may need to apply manifests twice, since at first time some manifests may fail with `"Namespace does not exists"`.
-
 ## Prerequisites
 
 * Rust (just pick latest) for local dev
