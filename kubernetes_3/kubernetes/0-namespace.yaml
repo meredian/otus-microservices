@@ -1,0 +1,5 @@
+# Prefix is added to create namespace first
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: meredian
