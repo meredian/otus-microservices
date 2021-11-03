@@ -1,38 +1,77 @@
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
-pub struct Todo {
+pub struct User {
     pub id: i32,
-    pub name: String,
+    pub username: String,
+    pub firstname: String,
+    pub lastname: String,
+    pub email: String,
+    pub phone: String,
     pub created_at: DateTime<Utc>,
-    pub checked: bool,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize)]
-pub struct TodoRequest {
-    pub name: String,
-}
-
-#[derive(Deserialize)]
-pub struct TodoUpdateRequest {
-    pub name: String,
-    pub checked: bool,
+pub struct UserCreateRequest {
+    pub username: String,
+    pub firstname: String,
+    pub lastname: String,
+    pub email: String,
+    pub phone: String,
 }
 
 #[derive(Serialize)]
-pub struct TodoResponse {
+pub struct UserCreateResponce {
     pub id: i32,
-    pub name: String,
-    pub checked: bool,
+    pub username: String,
+    pub firstname: String,
+    pub lastname: String,
+    pub email: String,
+    pub phone: String,
 }
 
-impl TodoResponse {
-    pub fn of(todo: Todo) -> TodoResponse {
-        TodoResponse {
-            id: todo.id,
-            name: todo.name,
-            checked: todo.checked,
+impl UserCreateResponce {
+    pub fn of(user: User) -> UserCreateResponce {
+        UserCreateResponce {
+            id: user.id,
+            username: user.username,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            email: user.email,
+            phone: user.phone,
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct UserUpdateRequest {
+    pub username: String,
+    pub firstname: String,
+    pub lastname: String,
+    pub email: String,
+    pub phone: String,
+}
+
+#[derive(Serialize)]
+pub struct UserUpdateResponse {
+    pub id: i32,
+    pub username: String,
+    pub firstname: String,
+    pub lastname: String,
+    pub email: String,
+    pub phone: String,
+}
+
+impl UserUpdateResponse {
+    pub fn of(user: User) -> UserUpdateResponse {
+        UserUpdateResponse {
+            id: user.id,
+            username: user.username,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            email: user.email,
+            phone: user.phone,
         }
     }
 }

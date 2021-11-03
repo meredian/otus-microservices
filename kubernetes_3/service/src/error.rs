@@ -1,12 +1,9 @@
 use mobc_postgres::tokio_postgres;
 use thiserror::Error;
 
+use serde::Serialize;
 use std::convert::Infallible;
-use serde::{Serialize};
-use warp::{http::StatusCode, reject, Reply, Rejection};
-
-use mobc::{Connection, Pool};
-use tokio_postgres::NoTls;
+use warp::{http::StatusCode, Rejection, Reply};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -18,6 +15,9 @@ pub enum Error {
     DBInitError(tokio_postgres::Error),
     #[error("error reading file: {0}")]
     ReadFileError(#[from] std::io::Error),
+    // We introduce custom NotFound type since
+    #[error("resource not found")]
+    NotFound(),
 }
 
 impl warp::reject::Reject for Error {}
@@ -40,6 +40,10 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
         message = "Invalid Body";
     } else if let Some(e) = err.find::<Error>() {
         match e {
+            Error::NotFound() => {
+                code = StatusCode::NOT_FOUND;
+                message = "Not Found";
+            }
             Error::DBQueryError(_) => {
                 code = StatusCode::BAD_REQUEST;
                 message = "Could not Execute request";
