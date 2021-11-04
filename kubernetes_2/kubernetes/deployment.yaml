@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: meredian/k2:server
+        image: meredian/otus-microservices:k2-service
         imagePullPolicy: Always
         ports:
         - containerPort: 3000

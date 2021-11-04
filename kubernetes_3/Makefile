@@ -1,4 +1,4 @@
-DOCKER_SERVICE_TAG := meredian/k2:server
+DOCKER_SERVICE_TAG := meredian/otus-microservices:k3-service
 
 SERVICE_FOLDER := service
 K8S_FOLDER := kubernetes
@@ -33,7 +33,7 @@ logs:
 test:
 	@echo "\nShould return 200 OK \"Hello world!\" on GET ${ROOT_URI} URL"
 	curl ${ROOT_URI} -v
-	@echo "\n\nShould return 200 OK {\"status\":\"ok\"} on GET ${ROOT_URI}/health URL"
+	@echo "\n\nShould return 200 OK {\"status\":\"OK\", \"DB\":\"OK\"} on GET ${ROOT_URI}/health URL"
 	curl ${ROOT_URI}/health -v
 	@echo "\n\nShould return 200 OK \"Hello world!\" on GET ${ROOT_URI}/meredian/some-url URL (rewrite URL to /)"
 	curl ${ROOT_URI}/otusapp/meredian/some-url -v

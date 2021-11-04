@@ -1,4 +1,4 @@
-DOCKER_SERVICE_TAG := meredian/k2:server
+DOCKER_SERVICE_TAG := meredian/otus-microservices:k2-service
 
 SERVICE_FOLDER := service
 K8S_FOLDER := kubernetes

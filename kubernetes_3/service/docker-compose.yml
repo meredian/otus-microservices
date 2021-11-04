@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  service-db:
+    environment:
+      POSTGRES_PASSWORD: pwd
+    image: postgres:14
+    ports:
+      - 5432:5432
+  service:
+    build: .
+    command: /bin/sh -c "echo ls -la && echo \"sleeping 1\" && sleep 1; ./migrate && ./service"
+    environment:
+      - PORT=3000
+      - PG_CONN_STRING=postgres://postgres:pwd@service-db:5432/postgres
+    ports:
+      - 3000:3000
+    depends_on:
+      - service-db
