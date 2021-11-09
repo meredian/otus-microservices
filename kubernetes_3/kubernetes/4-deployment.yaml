@@ -45,6 +45,7 @@ spec:
       - name: server
         image: meredian/otus-microservices:k3-service
         imagePullPolicy: Always
+        # To minimise duplication we just use yaml reference feature
         env: *env
         envFrom: *envFrom
         ports:

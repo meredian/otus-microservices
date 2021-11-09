@@ -1,9 +1,12 @@
-kubernetes_2
+kubernetes_3
 ============
 
 Folder includes:
-* Simple application (in Rust) which responses 200 OK to `GET /` and `GET /health`
-* Kubernetes manifest to deploy it as a service with Nginx ingress. Service is exposed as `http://arch.homework/`.
+* Application (in Rust) for managing `/user/` route & with `/health` handler
+* Helm packages to install PostgreSQL
+* Kubernetes manifest to deploy application as a service with Nginx ingress.
+
+Service is exposed as `http://arch.homework/`.
 
 ## Prerequisites
 
@@ -11,12 +14,14 @@ Folder includes:
 * `docker` for building service image
 * `kubectl` for deploying k8s manifests
 * `kubetail` for logs
+* `helm` for installing HELM dependencies
 * Some available kubernetes env (e.g. `minikube` or cloud)
 
 ## Usage
 
-* `make build` to build docker image of rust service
+* `make build` to build docker image of Rust service
 * `make push` to push image to Docker Hub (if you're `meredian` user :wink:)
+* `make helm` to install HEML dependencies
 * `make apply` to apply manifests
 * `make restart` to restart pods (in case image was changed, but not manifest change for deployment)
 * `make test` to run cURL queries to all expected urls, quick check
