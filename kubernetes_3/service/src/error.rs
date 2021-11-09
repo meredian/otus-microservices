@@ -11,10 +11,16 @@ pub enum Error {
     DBPoolError(mobc::Error<tokio_postgres::Error>),
     #[error("error executing DB query: {0}")]
     DBQueryError(#[from] tokio_postgres::Error),
-    #[error("error creating table: {0}")]
+    #[error("error initialising database: {0}")]
     DBInitError(tokio_postgres::Error),
+    #[error("error running {0} migration on database: {1}")]
+    DBMigrateError(String, tokio_postgres::Error),
+    #[error("migration for record from database \"{0}\" not found in migration list")]
+    DBMigrationNotFoundError(String),
     #[error("error reading file: {0}")]
     ReadFileError(#[from] std::io::Error),
+    #[error("error reading path from directory: {0}")]
+    DirectoryListError(std::io::Error),
     // We introduce custom NotFound type since
     #[error("resource not found")]
     NotFound(),

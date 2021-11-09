@@ -1,19 +1,19 @@
 use crate::data::{User, UserCreateRequest, UserUpdateRequest};
-use crate::error::Error::{DBInitError, DBPoolError, DBQueryError};
+use crate::error::Error::{DBPoolError, DBQueryError};
 use crate::{DBCon, DBPool, Result};
 use chrono::{DateTime, Utc};
 use mobc_postgres::tokio_postgres::Row;
 use mobc_postgres::{tokio_postgres, PgConnectionManager};
-use std::fs;
 use std::str::FromStr;
 use std::time::Duration;
 use tokio_postgres::{Config, Error, NoTls};
+
+pub mod migration;
 
 const DB_POOL_MAX_OPEN: u64 = 32;
 const DB_POOL_MAX_IDLE: u64 = 8;
 const DB_POOL_TIMEOUT_SECONDS: u64 = 15;
 
-const INIT_SQL: &str = "./migrations/init.sql";
 const TABLE: &str = "users";
 
 pub fn create_pool(conn_string: &String) -> std::result::Result<DBPool, mobc::Error<Error>> {
@@ -29,15 +29,6 @@ pub fn create_pool(conn_string: &String) -> std::result::Result<DBPool, mobc::Er
 
 pub async fn get_db_con(db_pool: &DBPool) -> std::result::Result<DBCon, crate::error::Error> {
     db_pool.get().await.map_err(DBPoolError)
-}
-
-pub async fn init_db(db_pool: &DBPool) -> std::result::Result<(), crate::error::Error> {
-    let init_file = fs::read_to_string(INIT_SQL)?;
-    let con = get_db_con(db_pool).await?;
-    con.batch_execute(init_file.as_str())
-        .await
-        .map_err(DBInitError)?;
-    Ok(())
 }
 
 pub async fn check_db(db_pool: &DBPool) -> std::result::Result<(), crate::error::Error> {
@@ -112,7 +103,7 @@ pub async fn get_user(db_pool: &DBPool, id: i32) -> Result<Option<User>> {
 pub async fn update_user(db_pool: &DBPool, id: i32, body: UserUpdateRequest) -> Result<User> {
     let con = get_db_con(db_pool).await?;
     let query = format!(
-        "UPDATE {} SET username = $1, firstname = $2, lastname = $3, email = $4, phone = $5, updated_at = $6 WHERE id = $3 RETURNING *",
+        "UPDATE {} SET username = $1, firstname = $2, lastname = $3, email = $4, phone = $5, updated_at = $6 WHERE id = $7 RETURNING *",
         TABLE
     );
     let now = Utc::now();

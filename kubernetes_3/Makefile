@@ -15,6 +15,10 @@ build:
 push:
 	docker push $(DOCKER_SERVICE_TAG)
 
+.PHONY: helm
+helm:
+	helm install postgres -f postgresql.values.yaml -n meredian bitnami/postgresql
+
 .PHONY: apply
 apply:
 	kubectl apply -f $(K8S_FOLDER)/

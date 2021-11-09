@@ -26,17 +26,21 @@ fn with_db(db_pool: DBPool) -> impl Filter<Extract = (DBPool,), Error = Infallib
 pub async fn migrate(config: &config::Config) {
     let db_pool = db::create_pool(&config.db_conn_string).expect("database pool can be created");
 
-    db::init_db(&db_pool)
+    db::migration::migrate(&db_pool)
         .await
-        .expect("database can be initialized");
+        .expect("failed to migrate database");
+}
+
+pub async fn wait_for_migrate(config: &config::Config) {
+    let db_pool = db::create_pool(&config.db_conn_string).expect("database pool can be created");
+
+    db::migration::wait_for_migrate(&db_pool)
+        .await
+        .expect("failed to wait for database migration");
 }
 
 pub async fn run(config: &config::Config) {
     let db_pool = db::create_pool(&config.db_conn_string).expect("database pool can be created");
-
-    db::init_db(&db_pool)
-        .await
-        .expect("database can be initialized");
 
     pretty_env_logger::init();
     let log = warp::log("api");
