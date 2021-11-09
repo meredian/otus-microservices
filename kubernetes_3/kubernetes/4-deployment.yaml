@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: meredian
+  name: k3
+  labels:
+    app: k3
+spec:
+  selector:
+    matchLabels:
+      app: k3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: k3
+    spec:
+      initContainers:
+      - name: wait-migration
+        image: meredian/otus-microservices:k3-service
+        imagePullPolicy: Always
+        command: ["./migrate", "--wait"]
+        env: &env
+          - name: PORT
+            value: "3000"
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                # Created by HELM installation
+                name: postgres-postgresql
+                key: postgresql-password
+          - name: PG_CONN_STRING
+            value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@postgres-postgresql:5432/$(DATABASE_NAME)"
+        envFrom: &envFrom
+          - configMapRef:
+              name: config-k3
+          - secretRef:
+              name: db-secret-k3
+      containers:
+      - name: server
+        image: meredian/otus-microservices:k3-service
+        imagePullPolicy: Always
+        env: *env
+        envFrom: *envFrom
+        ports:
+        - containerPort: 3000
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 3
+          periodSeconds: 3

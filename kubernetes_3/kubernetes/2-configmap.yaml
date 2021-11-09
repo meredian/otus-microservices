@@ -1,7 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-k3
   namespace: meredian
+  name: config-k3
 data:
-  DATABASE_NAME: k3-db
+  RUST_LOG: api # Log
+  PORT: "3000"

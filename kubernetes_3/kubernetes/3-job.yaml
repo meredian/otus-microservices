@@ -1,32 +1,21 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
   namespace: meredian
-  name: k3
+  name: migrate-job
   labels:
-    app: k3
+    app: migrate-job
 spec:
-  selector:
-    matchLabels:
-      app: k3
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
-  replicas: 3
   template:
     metadata:
+      name: migrate-job
       labels:
-        app: k3
+        app: migrate-job
     spec:
+      restartPolicy: OnFailure
       containers:
-      - name: server
-        image: meredian/otus-microservices:k3-service
-        imagePullPolicy: Always
+      - name: migrate
         env:
-          - name: PORT
-            value: "3000"
           - name: DATABASE_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -40,12 +29,6 @@ spec:
               name: config-k3
           - secretRef:
               name: db-secret-k3
-        ports:
-        - containerPort: 3000
-          name: http
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 3
-          periodSeconds: 3
+        image: meredian/otus-microservices:k3-service
+        command: ["./migrate"]
+  backoffLimit: 100
