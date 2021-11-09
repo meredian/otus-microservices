@@ -109,9 +109,11 @@ async fn apply_all_migrations(db_con: &DBCon) -> Result<(), Error> {
     }
 
     if let Err(err) = apply_migrations(db_con, migrations).await {
-        if let DBMigrateError(_, _) = err {
-            db_exec(db_con, "ROLLBACK").await?;
-        };
+        // We don't care about rollback success - even if it fails, we
+        // want to return original error. It's either migration error
+        // (e.g. bad query) or connection db problem. Then rollback will
+        // fail as well.
+        db_exec(db_con, "ROLLBACK").await.ok();
         return Err(err);
     } else {
         db_exec(db_con, "COMMIT").await?;

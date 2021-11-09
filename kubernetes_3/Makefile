@@ -2,10 +2,15 @@ DOCKER_SERVICE_TAG := meredian/otus-microservices:k3-service
 
 SERVICE_FOLDER := service
 K8S_FOLDER := kubernetes
+CHARTS_FOLDER := charts
 
 ROOT_URI := http://arch.homework
 
 all: build push apply restart test logs
+
+.PHONY: minikube
+minikube:
+	minikube start --vm-driver=hyperkit && minikube addons enable ingress
 
 .PHONY: build
 build:
@@ -17,11 +22,17 @@ push:
 
 .PHONY: helm
 helm:
-	helm install postgres -f postgresql.values.yaml -n meredian bitnami/postgresql
+	cd $(CHARTS_FOLDER) && helm install postgres \
+		-n meredian --create-namespace \
+		-f ./bitnami-postgresql.values.yaml \
+		./bitnami-postgresql-10.13.7.tgz
 
 .PHONY: apply
 apply:
 	kubectl apply -f $(K8S_FOLDER)/
+
+.PHONY: k8s
+k8s: helm apply
 
 # Handy way to update image if you have a new image & "Always"
 # image pull policy by gracefull restart of all k8s deployments
@@ -31,7 +42,7 @@ restart:
 
 .PHONY: logs
 logs:
-	kubetail -f k2 -n meredian
+	kubetail -f k3 -n meredian
 
 .PHONY: test
 test:

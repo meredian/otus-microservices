@@ -8,7 +8,7 @@ services:
       - 5432:5432
   service:
     build: .
-    command: /bin/sh -c "echo ls -la && echo \"sleeping 1\" && sleep 1; ./migrate && ./service"
+    command: /bin/sh -c "./migrate && ./service"
     environment:
       - PORT=3000
       - PG_CONN_STRING=postgres://postgres:pwd@service-db:5432/postgres
