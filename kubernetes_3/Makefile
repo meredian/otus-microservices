@@ -22,23 +22,16 @@ push:
 
 .PHONY: helm
 helm:
-	@IS_HELM_INSTALLED=$$(helm list -n meredian | grep postgres) && \
-    if [ -n "$$IS_HELM_INSTALLED" ]; then \
-		echo 'Postgres already installed from helm, skipping...'; \
-    else \
-		echo 'Installing postgres from helm' && \
+	@IS_HELM_INSTALLED=$$(helm list -n meredian | grep postgres); \
+	if [ -n "$$IS_HELM_INSTALLED" ]; then \
+		echo 'Postgres is already installed from helm, skipping...'; \
+	else \
+		echo 'Installing postgres from helm, skipping...'; \
 		cd $(CHARTS_FOLDER) && helm install postgres \
 			-n meredian --create-namespace \
 			-f ./bitnami-postgresql.values.yaml \
 			./bitnami-postgresql-10.13.7.tgz; \
-    fi
-
-# 	@IS_HELM_INSTALLED=$$(helm list -n meredian | grep postgres) && \
-# 	echo '$@: IS_HELM_INSTALLED is $$IS_HELM_INSTALLED' && \
-# 	if [ -n "$$IS_HELM_INSTALLED" ]; then \
-# 		echo '$@: Postgres already installed from helm, skipping' \
-# 	fi && \
-# 	echo '$@: done'
+	fi
 
 .PHONY: apply
 apply:
