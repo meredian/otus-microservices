@@ -105,7 +105,7 @@ pub async fn get_user_handler(id: i32, db_pool: DBPool) -> Result<impl Reply> {
     let user = db::get_user(&db_pool, id).await?;
     match user {
         Some(user) => Ok(json(&UserUpdateResponse::of(user))),
-        None => Err(Error::NotFound().into()),
+        None => Err(Error::UserNotFound(id).into()),
     }
 }
 
@@ -120,6 +120,9 @@ pub async fn update_user_handler(
 }
 
 pub async fn delete_user_handler(id: i32, db_pool: DBPool) -> Result<impl Reply> {
-    db::delete_user(&db_pool, id).await?;
-    Ok(StatusCode::NO_CONTENT)
+    if db::delete_user(&db_pool, id).await? {
+        Ok(StatusCode::NO_CONTENT)
+    } else {
+        Err(Error::UserNotFound(id).into())
+    }
 }

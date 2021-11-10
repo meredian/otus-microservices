@@ -22,8 +22,8 @@ pub enum Error {
     #[error("error reading path from directory: {0}")]
     DirectoryListError(std::io::Error),
     // We introduce custom NotFound type since
-    #[error("resource not found")]
-    NotFound(),
+    #[error("User with id {0} not found")]
+    UserNotFound(i32),
 }
 
 impl warp::reject::Reject for Error {}
@@ -46,9 +46,9 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
         message = "Invalid Body";
     } else if let Some(e) = err.find::<Error>() {
         match e {
-            Error::NotFound() => {
+            Error::UserNotFound(_) => {
                 code = StatusCode::NOT_FOUND;
-                message = "Not Found";
+                message = "User not found";
             }
             Error::DBQueryError(_) => {
                 code = StatusCode::BAD_REQUEST;

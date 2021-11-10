@@ -125,11 +125,12 @@ pub async fn update_user(db_pool: &DBPool, id: i32, body: UserUpdateRequest) -> 
     Ok(row_to_user(&row))
 }
 
-pub async fn delete_user(db_pool: &DBPool, id: i32) -> Result<()> {
+pub async fn delete_user(db_pool: &DBPool, id: i32) -> Result<bool> {
     let con = get_db_con(db_pool).await?;
     let query = format!("DELETE FROM {} WHERE id = $1", TABLE);
-    con.execute(query.as_str(), &[&id])
+    let res = con
+        .execute(query.as_str(), &[&id])
         .await
         .map_err(DBQueryError)?;
-    Ok(())
+    Ok(res > 0)
 }

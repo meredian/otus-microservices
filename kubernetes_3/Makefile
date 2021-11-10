@@ -3,10 +3,12 @@ DOCKER_SERVICE_TAG := meredian/otus-microservices:k3-service
 SERVICE_FOLDER := service
 K8S_FOLDER := kubernetes
 CHARTS_FOLDER := charts
+POSTMAN_FOLDER := postman
+SCRIPTS_FOLDER := scripts
 
 ROOT_URI := http://arch.homework
 
-all: build push helm apply restart test logs
+all: build push helm apply restart wait newman logs
 
 .PHONY: minikube
 minikube:
@@ -46,15 +48,17 @@ k8s: helm apply
 restart:
 	kubectl rollout restart deployment -n meredian
 
+
+.PHONE: wait
+wait:
+	$(SCRIPTS_FOLDER)/wait_with_curl.sh
+
+.PHONY: newman
+newman:
+	cd $(POSTMAN_FOLDER) && \
+	newman run arch.homework-k3.postman_collection.json \
+		-e local.postman_environment.json --verbose
+
 .PHONY: logs
 logs:
 	kubetail -f k3 -n meredian
-
-.PHONY: test
-test:
-	@echo "\nShould return 200 OK \"Hello world!\" on GET ${ROOT_URI} URL"
-	curl ${ROOT_URI} -v
-	@echo "\n\nShould return 200 OK {\"status\":\"OK\", \"DB\":\"OK\"} on GET ${ROOT_URI}/health URL"
-	curl ${ROOT_URI}/health -v
-	@echo "\n\nShould return 200 OK \"Hello world!\" on GET ${ROOT_URI}/meredian/some-url URL (rewrite URL to /)"
-	curl ${ROOT_URI}/otusapp/meredian/some-url -v
