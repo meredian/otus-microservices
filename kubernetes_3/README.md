@@ -27,6 +27,16 @@ Service is exposed as `http://arch.homework/`.
 
 ## Usage
 
+### If you're using minikube
+To enable `http://arch.homework`, you'll need add record to `/etc/hosts` with
+proper ip obtained by `minikube ip`. e.g:
+```
+192.168.1.23 arch.homework
+```
+
+### What can we make?
+
+* `make minikube` - spin up Minikube instance & enable ingress.
 * `make build` to build docker image of Rust service
 * `make push` to push image to Docker Hub (if you're `meredian` user :wink:)
 * `make helm` to install HEML dependencies
@@ -35,5 +45,5 @@ Service is exposed as `http://arch.homework/`.
 * `make wait` to wait for service to spin up (helpful to wait for helm installation to succeed)
 * `make newman` to quickly check API with `newman`
 * `make logs` to watch logs on deployed pods
-* `make` will trigger whole sequence in that order
+* `make` will trigger build, deploy & test sequence
 
