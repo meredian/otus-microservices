@@ -100,7 +100,11 @@ pub async fn get_user(db_pool: &DBPool, id: i32) -> Result<Option<User>> {
     Ok(row.map(|r| row_to_user(&r)))
 }
 
-pub async fn update_user(db_pool: &DBPool, id: i32, body: UserUpdateRequest) -> Result<User> {
+pub async fn update_user(
+    db_pool: &DBPool,
+    id: i32,
+    body: UserUpdateRequest,
+) -> Result<Option<User>> {
     let con = get_db_con(db_pool).await?;
     let query = format!(
         "UPDATE {} SET username = $1, firstname = $2, lastname = $3, email = $4, phone = $5, updated_at = $6 WHERE id = $7 RETURNING *",
@@ -108,7 +112,7 @@ pub async fn update_user(db_pool: &DBPool, id: i32, body: UserUpdateRequest) -> 
     );
     let now = Utc::now();
     let row = con
-        .query_one(
+        .query_opt(
             query.as_str(),
             &[
                 &body.username,
@@ -122,7 +126,7 @@ pub async fn update_user(db_pool: &DBPool, id: i32, body: UserUpdateRequest) -> 
         )
         .await
         .map_err(DBQueryError)?;
-    Ok(row_to_user(&row))
+    Ok(row.map(|r| row_to_user(&r)))
 }
 
 pub async fn delete_user(db_pool: &DBPool, id: i32) -> Result<bool> {

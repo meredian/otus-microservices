@@ -114,9 +114,10 @@ pub async fn update_user_handler(
     body: UserUpdateRequest,
     db_pool: DBPool,
 ) -> Result<impl Reply> {
-    Ok(json(&UserUpdateResponse::of(
-        db::update_user(&db_pool, id, body).await?,
-    )))
+    match db::update_user(&db_pool, id, body).await? {
+        Some(u) => Ok(json(&UserUpdateResponse::of(u))),
+        None => Err(Error::UserNotFound(id).into()),
+    }
 }
 
 pub async fn delete_user_handler(id: i32, db_pool: DBPool) -> Result<impl Reply> {
