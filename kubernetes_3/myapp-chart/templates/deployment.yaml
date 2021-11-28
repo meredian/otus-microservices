@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: meredian
-  name: k3
+  name: {{ include "myapp.fullname" . }}
   labels:
-    app: k3
+    {{- include "myapp.labels" . | nindent 4 }}
+    app: {{ include "myapp.fullname" . }}
 spec:
   selector:
     matchLabels:
-      app: k3
+      app: {{ include "myapp.fullname" . }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -18,32 +18,25 @@ spec:
   template:
     metadata:
       labels:
-        app: k3
+        {{- include "myapp.selectorLabels" . | nindent 8 }}
+        app: {{ include "myapp.fullname" . }}
     spec:
       initContainers:
       - name: wait-migration
-        image: meredian/otus-microservices:k3-service
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: Always
         command: ["./migrate", "--wait"]
         env: &env
           - name: PORT
             value: "3000"
-          - name: DATABASE_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                # Created by HELM installation
-                name: postgres-postgresql
-                key: postgresql-password
-          - name: PG_CONN_STRING
-            value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@postgres-postgresql:5432/$(DATABASE_NAME)"
         envFrom: &envFrom
           - configMapRef:
-              name: config-k3
+              name: {{ include "myapp.fullname" . }}-config
           - secretRef:
-              name: db-secret-k3
+              name: {{ include "myapp.fullname" . }}-secret
       containers:
       - name: server
-        image: meredian/otus-microservices:k3-service
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: Always
         # To minimise duplication we just use yaml reference feature
         env: *env
