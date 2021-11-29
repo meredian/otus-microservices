@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "myapp.fullname" . }}-migrate
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+    job: {{ include "myapp.fullname" . }}-migrate
+spec:
+  template:
+    metadata:
+      name: {{ include "myapp.fullname" . }}-migrate
+      labels:
+        {{- include "myapp.labels" . | nindent 8 }}
+        job: {{ include "myapp.fullname" . }}-migrate
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: check-db-ready
+          image: postgres:latest
+          env:
+            - name: POSTGRES_HOST
+              value: {{ include "postgresql.fullname" . | quote }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.postgresql.service.port | quote }}
+          command:
+            - sh
+            - "-c"
+            - |
+              until pg_isready -h $POSTGRES_HOST  -p  $POSTGRES_PORT;
+              do echo waiting for database; sleep 2; done;
+      containers:
+      - name: migrate
+        envFrom:
+          - configMapRef:
+              name: {{ include "myapp.fullname" . }}-config
+          - secretRef:
+              name: {{ include "myapp.fullname" . }}-secret
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["./migrate"]
+  backoffLimit: 100

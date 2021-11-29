@@ -1,0 +1,10 @@
+
+*.md
+.git/
+target/
+.gitignore
+.envrc
+.*
+Dockerfile
+docker-compose.yml
+rustfmt.toml

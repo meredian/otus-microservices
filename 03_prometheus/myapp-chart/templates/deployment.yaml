@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+    app: {{ include "myapp.fullname" . }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "myapp.fullname" . }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        {{- include "myapp.selectorLabels" . | nindent 8 }}
+        app: {{ include "myapp.fullname" . }}
+    spec:
+      initContainers:
+      - name: wait-migration
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        command: ["./migrate", "--wait"]
+        env: &env
+          - name: PORT
+            value: "3000"
+        envFrom: &envFrom
+          - configMapRef:
+              name: {{ include "myapp.fullname" . }}-config
+          - secretRef:
+              name: {{ include "myapp.fullname" . }}-secret
+      containers:
+      - name: server
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        # To minimise duplication we just use yaml reference feature
+        env: *env
+        envFrom: *envFrom
+        ports:
+        - containerPort: 3000
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 3
+          periodSeconds: 3

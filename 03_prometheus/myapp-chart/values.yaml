@@ -1,0 +1,35 @@
+replicaCount: 3
+
+image:
+  repository: meredian/otus-microservices
+  tag: "k3-service"
+  pullPolicy: Always
+
+# nameOverride: "myapp"
+# fullnameOverride: "myapp-chart"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: arch.homework
+      paths:
+        - path: /
+          pathType: Prefix
+
+postgresql:
+  enabled: true
+  postgresqlUsername: myapp-db-user
+  postgresqlPassword: pwd
+  postgresqlDatabase: myapp-db
+  service:
+    port: "5432"
+
+metrics:
+  serviceMonitor:
+    enabled: true

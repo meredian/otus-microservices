@@ -1,0 +1,17 @@
+apiVersion: v2
+name: myapp
+description: A Helm chart for Kubernetes
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Rust_programming_language_black_logo.svg/1280px-Rust_programming_language_black_logo.svg.png
+
+type: application
+
+version: 0.1.0
+appVersion: 0.1.0
+
+dependencies:
+  - name: postgresql
+    version: 10.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+    tags:
+      - myapp-database
