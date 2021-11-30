@@ -1,12 +1,12 @@
 use crate::data::{User, UserCreateRequest, UserUpdateRequest};
-use crate::error::Error::{DBPoolError, DBQueryError};
+use crate::error::Error::{DBCreatePoolError, DBPoolError, DBQueryError};
 use crate::{DBCon, DBPool, Result};
 use chrono::{DateTime, Utc};
 use mobc_postgres::tokio_postgres::Row;
 use mobc_postgres::{tokio_postgres, PgConnectionManager};
 use std::str::FromStr;
 use std::time::Duration;
-use tokio_postgres::{Config, Error, NoTls};
+use tokio_postgres::{Config, NoTls};
 
 pub mod migration;
 
@@ -16,8 +16,8 @@ const DB_POOL_TIMEOUT_SECONDS: u64 = 15;
 
 const TABLE: &str = "users";
 
-pub fn create_pool(conn_string: &String) -> std::result::Result<DBPool, mobc::Error<Error>> {
-    let config = Config::from_str(conn_string)?;
+pub fn create_pool(conn_string: &String) -> Result<DBPool> {
+    let config = Config::from_str(conn_string).map_err(DBCreatePoolError)?;
 
     let manager = PgConnectionManager::new(config, NoTls);
     Ok(DBPool::builder()
@@ -27,11 +27,11 @@ pub fn create_pool(conn_string: &String) -> std::result::Result<DBPool, mobc::Er
         .build(manager))
 }
 
-pub async fn get_db_con(db_pool: &DBPool) -> std::result::Result<DBCon, crate::error::Error> {
+pub async fn get_db_con(db_pool: &DBPool) -> Result<DBCon> {
     db_pool.get().await.map_err(DBPoolError)
 }
 
-pub async fn check_db(db_pool: &DBPool) -> std::result::Result<(), crate::error::Error> {
+pub async fn check_db(db_pool: &DBPool) -> Result<()> {
     let con = get_db_con(&db_pool).await?;
     con.execute("SELECT 1", &[]).await.map_err(DBQueryError)?;
     Ok(())

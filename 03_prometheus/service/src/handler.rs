@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use crate::{db, with_db, DBPool, Result};
 use serde::Serialize;
 use warp::Filter;
@@ -5,7 +7,10 @@ use warp::{http::StatusCode, Reply};
 
 use crate::data::{UserCreateRequest, UserCreateResponce, UserUpdateRequest, UserUpdateResponse};
 use crate::error::Error;
+use crate::metrics::REGISTRY;
 use warp::reply::{json, with_status};
+
+type InfalliableResult<T> = std::result::Result<T, Infallible>;
 
 #[derive(Debug, Serialize)]
 struct HealthCheckReply {
@@ -13,11 +18,18 @@ struct HealthCheckReply {
     db: String,
 }
 
-pub async fn root_handler() -> Result<impl Reply> {
+fn result_reply<T: Reply, E: Reply>(res: std::result::Result<T, E>) -> impl Reply {
+    match res {
+        Ok(r) => r.into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+pub async fn root_handler() -> InfalliableResult<impl Reply> {
     Ok("Hello, world!")
 }
 
-pub async fn health_handler(db_pool: DBPool) -> Result<impl Reply> {
+pub async fn health_handler(db_pool: DBPool) -> InfalliableResult<impl Reply> {
     let mut is_ok = true;
     let db = match db::check_db(&db_pool).await {
         Ok(()) => "OK".into(),
@@ -38,6 +50,40 @@ pub async fn health_handler(db_pool: DBPool) -> Result<impl Reply> {
     ))
 }
 
+async fn metrics_handler() -> InfalliableResult<impl Reply> {
+    use prometheus::Encoder;
+    let encoder = prometheus::TextEncoder::new();
+
+    let mut buffer = Vec::new();
+    if let Err(e) = encoder.encode(&REGISTRY.gather(), &mut buffer) {
+        eprintln!("could not encode custom metrics: {}", e);
+    };
+    let mut res = match String::from_utf8(buffer.clone()) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("custom metrics could not be from_utf8'd: {}", e);
+            String::default()
+        }
+    };
+    buffer.clear();
+
+    let mut buffer = Vec::new();
+    if let Err(e) = encoder.encode(&prometheus::gather(), &mut buffer) {
+        eprintln!("could not encode prometheus metrics: {}", e);
+    };
+    let res_custom = match String::from_utf8(buffer.clone()) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("prometheus metrics could not be from_utf8'd: {}", e);
+            String::default()
+        }
+    };
+    buffer.clear();
+
+    res.push_str(&res_custom);
+    Ok(res)
+}
+
 pub fn router(
     db_pool: &DBPool,
 ) -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
@@ -46,7 +92,14 @@ pub fn router(
         .and(with_db(db_pool.clone()))
         .and_then(health_handler);
 
-    root_router.or(health_router).or(user_router(&db_pool))
+    let metrics_router = warp::path!("metrics")
+        .and(warp::get())
+        .and_then(metrics_handler);
+
+    root_router
+        .or(health_router)
+        .or(metrics_router)
+        .or(user_router(&db_pool))
 }
 
 fn user_router(
@@ -55,29 +108,34 @@ fn user_router(
     let get_users_route = warp::path!("user")
         .and(warp::get())
         .and(with_db(db_pool.clone()))
-        .and_then(get_users_handler);
+        .then(get_users_handler)
+        .map(result_reply);
 
     let get_user_route = warp::path!("user" / i32)
         .and(warp::get())
         .and(with_db(db_pool.clone()))
-        .and_then(get_user_handler);
+        .then(get_user_handler)
+        .map(result_reply);
 
     let create_user_route = warp::path!("user")
         .and(warp::post())
         .and(warp::body::json())
         .and(with_db(db_pool.clone()))
-        .and_then(create_user_handler);
+        .then(create_user_handler)
+        .map(result_reply);
 
     let update_user_route = warp::path!("user" / i32)
         .and(warp::put())
         .and(warp::body::json())
         .and(with_db(db_pool.clone()))
-        .and_then(update_user_handler);
+        .then(update_user_handler)
+        .map(result_reply);
 
     let delete_user_route = warp::path!("user" / i32)
         .and(warp::delete())
         .and(with_db(db_pool.clone()))
-        .and_then(delete_user_handler);
+        .then(delete_user_handler)
+        .map(result_reply);
 
     get_user_route
         .or(get_users_route)

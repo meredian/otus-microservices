@@ -1,7 +1,5 @@
 use std::convert::Infallible;
-use warp::{Filter, Rejection};
-
-type Result<T> = std::result::Result<T, Rejection>;
+use warp::Filter;
 
 use mobc::{Connection, Pool};
 use mobc_postgres::{
@@ -18,6 +16,9 @@ mod data;
 mod db;
 mod error;
 mod handler;
+mod metrics;
+
+type Result<T> = std::result::Result<T, error::Error>;
 
 fn with_db(db_pool: DBPool) -> impl Filter<Extract = (DBPool,), Error = Infallible> + Clone {
     warp::any().map(move || db_pool.clone())
@@ -40,10 +41,29 @@ pub async fn wait_for_migrate(config: &config::Config) {
 }
 
 pub async fn run(config: &config::Config) {
-    let db_pool = db::create_pool(&config.db_conn_string).expect("database pool can be created");
+    metrics::register_custom_metrics();
+    let env = config.env.clone();
+    let log = warp::log::custom(move |info| {
+        let path = info.path();
+        let method = info.method().as_str();
+        metrics::track_request_time(info.elapsed().as_secs_f64(), method, path, &env);
+        metrics::track_status_code(info.status().as_u16().into(), method, path, &env);
 
-    pretty_env_logger::init();
-    let log = warp::log("api");
+        println!(
+            "{{\"method\":\"{}\",\"path\":\"{}\",\"status\":\"{}\",\"remote_addr\":\"{:?}\",\"version\":\"{:?}\",\"referer\":\"{:?}\",\"user_agent\":\"{:?}\",\"elapsed\":\"{:?}\",\"host\":\"{:?}\",\"request_headers\":{:?}}}",
+            info.method(),
+            info.path(),
+            info.status(),
+            info.remote_addr(),
+            info.version(),
+            info.referer(),
+            info.user_agent(),
+            info.elapsed(),
+            info.host(),
+            info.request_headers()
+        );
+    });
+    let db_pool = db::create_pool(&config.db_conn_string).expect("database pool can be created");
 
     let routes = handler::router(&db_pool)
         .with(log)

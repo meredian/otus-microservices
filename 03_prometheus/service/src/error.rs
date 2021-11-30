@@ -3,10 +3,12 @@ use thiserror::Error;
 
 use serde::Serialize;
 use std::convert::Infallible;
-use warp::{http::StatusCode, Rejection, Reply};
+use warp::{http::StatusCode, reply, Rejection, Reply};
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("error creating DB pool: {0}")]
+    DBCreatePoolError(tokio_postgres::Error),
     #[error("error getting connection from DB pool: {0}")]
     DBPoolError(mobc::Error<tokio_postgres::Error>),
     #[error("error executing DB query: {0}")]
@@ -26,11 +28,35 @@ pub enum Error {
     UserNotFound(i32),
 }
 
-impl warp::reject::Reject for Error {}
+impl Reply for Error {
+    fn into_response(self) -> reply::Response {
+        let (code, message) = map_error(&self);
+        error_reply(code, message).into_response()
+    }
+}
 
 #[derive(Serialize)]
 struct ErrorResponse {
     message: String,
+}
+
+fn map_error(err: &Error) -> (StatusCode, &'static str) {
+    match err {
+        Error::UserNotFound(_) => (StatusCode::NOT_FOUND, "User not found"),
+        Error::DBQueryError(_) => (StatusCode::BAD_REQUEST, "Could not Execute request"),
+        _ => {
+            eprintln!("unhandled application error: {:?}", err);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+        }
+    }
+}
+
+fn error_reply(code: StatusCode, message: &str) -> impl Reply {
+    let json = warp::reply::json(&ErrorResponse {
+        message: message.into(),
+    });
+
+    return warp::reply::with_status(json, code);
 }
 
 pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
@@ -45,21 +71,9 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
         code = StatusCode::BAD_REQUEST;
         message = "Invalid Body";
     } else if let Some(e) = err.find::<Error>() {
-        match e {
-            Error::UserNotFound(_) => {
-                code = StatusCode::NOT_FOUND;
-                message = "User not found";
-            }
-            Error::DBQueryError(_) => {
-                code = StatusCode::BAD_REQUEST;
-                message = "Could not Execute request";
-            }
-            _ => {
-                eprintln!("unhandled application error: {:?}", err);
-                code = StatusCode::INTERNAL_SERVER_ERROR;
-                message = "Internal Server Error";
-            }
-        }
+        let (mapped_code, mapped_message) = map_error(e);
+        code = mapped_code;
+        message = mapped_message;
     } else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
         code = StatusCode::METHOD_NOT_ALLOWED;
         message = "Method Not Allowed";
@@ -69,9 +83,5 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
         message = "Internal Server Error";
     }
 
-    let json = warp::reply::json(&ErrorResponse {
-        message: message.into(),
-    });
-
-    Ok(warp::reply::with_status(json, code))
+    Ok(error_reply(code, message))
 }

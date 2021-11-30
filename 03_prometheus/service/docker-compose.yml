@@ -10,6 +10,7 @@ services:
     build: .
     command: /bin/sh -c "./migrate && ./service"
     environment:
+      - RUST_BACKTRACE=1
       - PORT=3000
       - PG_CONN_STRING=postgres://postgres:pwd@service-db:5432/postgres
     ports:

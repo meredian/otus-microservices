@@ -6,12 +6,23 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# Async runtime
 tokio = { version = "1", features = ["full"] }
+# Serialisation
 serde =  { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+# Server framework
 warp = "0.3"
+# Logger
 pretty_env_logger = "0.4"
-mobc-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
+# Connetion pool + PostgreSQL client
 mobc = "0.7"
-thiserror = "1.0"
+mobc-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
+# Date crate. Integrated with DB
 chrono = { version = "0.4", features = ["serde"] }
+# Error handling
+thiserror = "1.0"
+# Monitoring. Process means internal CPU/mem/etc injection
+prometheus = { version = "0.13.0", features = ["process"] }
+# Generic helpers
+lazy_static = "1.4.0" # Lazy initialisation

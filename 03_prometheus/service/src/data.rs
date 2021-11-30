@@ -1,4 +1,4 @@
-use chrono::prelude::*;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 pub struct User {
