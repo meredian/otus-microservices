@@ -1,5 +1,5 @@
 KUBERNETES_VERSION := v1.22.3
-DOCKER_SERVICE_TAG := meredian/otus-microservices:k3-service
+DOCKER_SERVICE_TAG := meredian/otus-microservices:prom-service
 
 SERVICE_FOLDER := service
 CHART_FOLDER := myapp-chart
@@ -9,7 +9,7 @@ SCRIPTS_FOLDER := scripts
 ROOT_URI := http://arch.homework
 
 all: deploy restart wait newman logs
-full: build push all
+dev: build push all
 
 .PHONY: minikube
 minikube:

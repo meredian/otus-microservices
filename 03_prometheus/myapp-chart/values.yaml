@@ -2,7 +2,7 @@ replicaCount: 3
 
 image:
   repository: meredian/otus-microservices
-  tag: "k3-service"
+  tag: "prom-service"
   pullPolicy: Always
 
 # nameOverride: "myapp"
