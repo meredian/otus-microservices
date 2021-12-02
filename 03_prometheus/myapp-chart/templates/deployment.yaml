@@ -43,7 +43,7 @@ spec:
         envFrom: *envFrom
         ports:
         - containerPort: 3000
-          name: http
+          name: web
         readinessProbe:
           httpGet:
             path: /health

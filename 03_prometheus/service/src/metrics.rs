@@ -1,10 +1,8 @@
 use lazy_static::lazy_static;
-use prometheus::{HistogramOpts, HistogramVec, IntCounter, IntCounterVec, Opts, Registry};
+use prometheus::{HistogramOpts, HistogramVec, IntCounterVec, Opts, Registry};
 
 lazy_static! {
     pub static ref REGISTRY: Registry = Registry::new();
-    pub static ref INCOMING_REQUESTS: IntCounter =
-        IntCounter::new("incoming_requests", "Incoming Requests").expect("metric can be created");
     pub static ref RESPONSE_CODE_COLLECTOR: IntCounterVec = IntCounterVec::new(
         Opts::new("response_code", "Response Codes"),
         &["env", "method", "path", "statuscode", "type"]
@@ -18,10 +16,6 @@ lazy_static! {
 }
 
 pub fn register_custom_metrics() {
-    REGISTRY
-        .register(Box::new(INCOMING_REQUESTS.clone()))
-        .expect("collector can be registered");
-
     REGISTRY
         .register(Box::new(RESPONSE_CODE_COLLECTOR.clone()))
         .expect("collector can be registered");

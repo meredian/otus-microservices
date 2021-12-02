@@ -5,9 +5,6 @@ image:
   tag: "prom-service"
   pullPolicy: Always
 
-# nameOverride: "myapp"
-# fullnameOverride: "myapp-chart"
-
 service:
   type: ClusterIP
   port: 80

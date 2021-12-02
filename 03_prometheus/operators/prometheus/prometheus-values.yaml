@@ -1,0 +1,31 @@
+grafana:
+  adminPassword: admin
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/tls-acme: "false"
+    hosts:
+      - grafana.arch.homework
+  podLabels:
+    app: grafana
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/tls-acme: "false"
+    hosts:
+      - prometheus.arch.homework
+    paths: ['/']
+    pathType: ImplementationSpecific
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMetadata:
+      labels:
+        app: prometheus
+        app.kubernetes.io/instance: prometheus
+        app.kubernetes.io/name: prometheus
