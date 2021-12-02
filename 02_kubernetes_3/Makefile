@@ -9,7 +9,7 @@ SCRIPTS_FOLDER := scripts
 ROOT_URI := http://arch.homework
 
 all: deploy restart wait newman logs
-full: build push all
+dev: build push all
 
 .PHONY: minikube
 minikube:
