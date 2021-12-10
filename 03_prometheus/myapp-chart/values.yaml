@@ -19,6 +19,10 @@ ingress:
         - path: /
           pathType: Prefix
 
+metrics:
+  serviceMonitor:
+    enabled: true
+
 postgresql:
   enabled: true
   postgresqlUsername: myapp-db-user
@@ -26,7 +30,8 @@ postgresql:
   postgresqlDatabase: myapp-db
   service:
     port: "5432"
-
-metrics:
-  serviceMonitor:
+  metrics:
     enabled: true
+    serviceMonitor:
+      enabled: true
+
