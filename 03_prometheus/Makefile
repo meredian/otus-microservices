@@ -5,6 +5,10 @@ SERVICE_FOLDER := service
 CHART_FOLDER := myapp-chart
 POSTMAN_FOLDER := postman
 SCRIPTS_FOLDER := scripts
+OPERATORS_FOLDER := operators
+
+# Deployed namespace
+NAMESPACE := meredian
 
 ROOT_URI := http://arch.homework
 
@@ -22,6 +26,12 @@ minikube:
 	--kubernetes-version=$(KUBERNETES_VERSION) \
 	&& minikube addons enable ingress
 
+.PHONY: operators
+operators:
+	@echo "Creating operator namespaces"
+	kubectl apply -f operators/namespaces.yaml
+	$(OPERATORS_FOLDER)/prometheus/install.sh
+
 .PHONY: build
 build:
 	cd $(SERVICE_FOLDER) && docker build . -t $(DOCKER_SERVICE_TAG)
@@ -32,24 +42,24 @@ push:
 
 .PHONY: deploy
 deploy:
-	@IS_INSTALLED=$$(helm list -n meredian | grep myapp); \
+	@IS_INSTALLED=$$(helm list -n $(NAMESPACE) | grep myapp); \
 	if [ -n "$$IS_INSTALLED" ]; then \
 		echo 'Upgraging release from helm'; \
-		helm upgrade myapp ./$(CHART_FOLDER) -n meredian; \
+		helm upgrade myapp ./$(CHART_FOLDER) -n $(NAMESPACE); \
 	else \
 		echo 'Installing release from helm'; \
-		helm install myapp ./$(CHART_FOLDER) -n meredian --create-namespace; \
+		helm install myapp ./$(CHART_FOLDER) -n $(NAMESPACE) --create-namespace; \
 	fi
 
 .PHONY: uninstall
 uninstall:
-	helm uninstall myapp -n meredian
+	helm uninstall myapp -n $(NAMESPACE)
 
 # Handy way to update image if you have a new image & "Always"
 # image pull policy by gracefull restart of all k8s deployments
 .PHONY: restart
 restart:
-	kubectl rollout restart deployment -n meredian
+	kubectl rollout restart deployment -n $(NAMESPACE)
 
 .PHONE: wait
 wait:
