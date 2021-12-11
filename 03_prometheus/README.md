@@ -12,9 +12,11 @@ Folder includes:
 * Helper scripts
 * Example image how should result look like
 
-Service is exposed as `http://arch.homework/`
-Grafana is exposed as `http://grafana.arch.homework/`
-Prometheus is exposed as `http://prometheus.arch.homework/`
+### Ingress urls
+
+* Service is exposed as `http://arch.homework/`
+* Grafana is exposed as `http://grafana.arch.homework/`
+* Prometheus is exposed as `http://prometheus.arch.homework/`
 
 ## Quickstart
 
